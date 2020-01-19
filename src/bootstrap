@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
 
+# put version string into file used @ configure time, see AC_INIT
+git describe --tags --always --dirty > VERSION
+
 # generate list of source files for use in Makefile.am
 # if you add new source files, you must run ./bootstrap again
 src_listvar () {
@@ -8,15 +11,17 @@ src_listvar () {
     suffix=$2
     var=$3
 
-    find "${basedir}" -name "${suffix}" | tr '\n' ' ' | (echo -n "${var} = " && cat)
+    find "${basedir}" -name "${suffix}" | LC_ALL=C sort | tr '\n' ' ' | (echo -n "${var} = " && cat)
     echo ""
 }
 
 VARS_FILE=src_vars.mk
+AUTORECONF=${AUTORECONF:-autoreconf}
 
 echo "Generating file lists: ${VARS_FILE}"
 (
   src_listvar "sysapi/sysapi" "*.c" "SYSAPI_C"
+  src_listvar "sysapi/include" "*.h" "SYSAPI_H"
   src_listvar "sysapi/sysapi_util" "*.c" "SYSAPIUTIL_C"
   printf "SYSAPI_SRC = \$(SYSAPI_H) \$(SYSAPI_C) \$(SYSAPIUTIL_C)\n"
 
@@ -24,17 +29,6 @@ echo "Generating file lists: ${VARS_FILE}"
   src_listvar "common" "*.c" "COMMON_C"
   src_listvar "common" "*.h" "COMMON_H"
   printf "COMMON_SRC = \$(COMMON_C) \$(COMMON_CXX) \$(COMMON_H)\n"
-
-  src_listvar "test/common/sample" "*.c" "SAMPLE_C"
-  src_listvar "test/common/sample" "*.h" "SAMPLE_H"
-  printf "SAMPLE_SRC = \$(SAMPLE_C) \$(SAMPLE_H)\n"
 ) > ${VARS_FILE}
 
-printf "Running libtoolize ...\n"
-libtoolize --install
-printf "Running aclocal ...\n"
-aclocal
-printf "Running autoconf ...\n"
-autoconf
-printf "Running automake ...\n"
-automake --add-missing
+${AUTORECONF} --install --sym

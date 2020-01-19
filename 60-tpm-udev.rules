@@ -1,0 +1,3 @@
+# tpm2 devices can be accessed by the tss user or tss group members
+KERNEL=="tpm[0-9]*", MODE="0660", OWNER="tss"
+KERNEL=="tpmrm[0-9]*", MODE="0660", OWNER="tss", GROUP="tss"

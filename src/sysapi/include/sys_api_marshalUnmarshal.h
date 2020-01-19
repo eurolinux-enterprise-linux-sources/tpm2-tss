@@ -1,5 +1,5 @@
 //**********************************************************************;
-// Copyright (c) 2015, Intel Corporation
+// Copyright (c) 2015, 2017 Intel Corporation
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -712,6 +712,11 @@ void Unmarshal_TPML_TAGGED_TPM_PROPERTY(
 	TPML_TAGGED_TPM_PROPERTY *taggedTpmProperty
 	);
 
+void Unmarshal_TPML_INTEL_PTT_PROPERTY(
+	TSS2_SYS_CONTEXT *sysContext,
+	TPML_INTEL_PTT_PROPERTY *intelPttProperty
+);
+
 void Unmarshal_TPML_TAGGED_PCR_PROPERTY(
 	TSS2_SYS_CONTEXT *sysContext,
 	TPML_TAGGED_PCR_PROPERTY *taggedPcrProperty
@@ -979,5 +984,14 @@ void Unmarshal_TPMS_CREATION_DATA(
 	TPMS_CREATION_DATA *creationData
 	);
 
+void Unmarshal_TPMS_AC_OUTPUT(
+	TSS2_SYS_CONTEXT *sysContext,
+	TPMS_AC_OUTPUT *acDataOut
+	);
+
+void Unmarshal_TPML_AC_CAPABILITIES(
+	TSS2_SYS_CONTEXT *sysContext,
+	TPML_AC_CAPABILITIES *capabilityData
+	);
 
 #endif

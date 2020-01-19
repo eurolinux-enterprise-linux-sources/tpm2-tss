@@ -25,7 +25,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  ***********************************************************************/
 
-#include <sapi/tpm20.h>
+#include "sapi/tpm20.h"
 #include "sysapi_util.h"
 
 void Unmarshal_TPML_DIGEST_VALUES(
@@ -43,7 +43,7 @@ void Unmarshal_TPML_DIGEST_VALUES(
 
 	Unmarshal_UINT32( SYS_CONTEXT->tpmOutBuffPtr, SYS_CONTEXT->maxResponseSize, &(SYS_CONTEXT->nextData), &digestValues->count, &( SYS_CONTEXT->rval ) );
 
-	for( i = 0; i < digestValues->count; i++ )
+	for( i = 0; i < digestValues->count && SYS_CONTEXT->rval == TSS2_RC_SUCCESS; i++ )
 	{
 		Unmarshal_TPMT_HA( sysContext, &digestValues->digests[i] );
 	}

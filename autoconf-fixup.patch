@@ -1,0 +1,23 @@
+diff -ur tpm2-tss-1.4.0/bootstrap tpm2-tss-1.4.0-new/bootstrap
+--- tpm2-tss-1.4.0/bootstrap	2018-03-02 17:15:33.000000000 -0700
++++ tpm2-tss-1.4.0-new/bootstrap	2018-06-15 17:46:09.072306885 -0700
+@@ -1,9 +1,6 @@
+ #!/bin/sh
+ set -e
+ 
+-# put version string into file used @ configure time, see AC_INIT
+-git describe --tags --always --dirty > VERSION
+-
+ # generate list of source files for use in Makefile.am
+ # if you add new source files, you must run ./bootstrap again
+ src_listvar () {
+diff -ur tpm2-tss-1.4.0/configure.ac tpm2-tss-1.4.0-new/configure.ac
+--- tpm2-tss-1.4.0/configure.ac	2018-03-02 17:15:33.000000000 -0700
++++ tpm2-tss-1.4.0-new/configure.ac	2018-06-15 17:46:23.667101384 -0700
+@@ -1,5 +1,5 @@
+ AC_INIT([tpm2-tss],
+-        [m4_esyscmd_s([cat VERSION])])
++        [1.4.0])
+ AC_CONFIG_MACRO_DIR([m4])
+ AC_PROG_CC
+ AC_PROG_CXX

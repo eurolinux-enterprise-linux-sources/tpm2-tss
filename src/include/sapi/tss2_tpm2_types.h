@@ -1,5 +1,5 @@
 //**********************************************************************;
-// Copyright (c) 2015, Intel Corporation
+// Copyright (c) 2015, 2017 Intel Corporation
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,9 @@
 #define    MAX_TPM_PROPERTIES   (MAX_CAP_DATA/sizeof(TPMS_TAGGED_PROPERTY))
 #define    MAX_PCR_PROPERTIES   (MAX_CAP_DATA/sizeof(TPMS_TAGGED_PCR_SELECT))
 #define    MAX_ECC_CURVES       (MAX_CAP_DATA/sizeof(TPM_ECC_CURVE))
+#define    MAX_PTT_PROPERTIES   (MAX_CAP_DATA/sizeof(UINT32))
+/* Attached Component Capabilities */
+#define TPM2_MAX_AC_CAPABILITIES (MAX_CAP_DATA/sizeof(TPMS_AC_OUTPUT))
 
 /* Table 4  Defines for Logic Values */
 #define	TRUE	1
@@ -202,9 +205,9 @@ typedef	UINT32 TPM_RC;
 
 /* Table 17  Definition of INT8 TPM_CLOCK_ADJUST Constants <IN> */
 typedef	INT8 TPM_CLOCK_ADJUST;
-#define	TPM_CLOCK_COARSE_SLOWER	(3 )	 /* Slow the Clock update rate by one coarse adjustment step.  */
-#define	TPM_CLOCK_MEDIUM_SLOWER	(2 )	 /* Slow the Clock update rate by one medium adjustment step.  */
-#define	TPM_CLOCK_FINE_SLOWER	(1 )	 /* Slow the Clock update rate by one fine adjustment step.  */
+#define	TPM_CLOCK_COARSE_SLOWER	(-3 )	 /* Slow the Clock update rate by one coarse adjustment step.  */
+#define	TPM_CLOCK_MEDIUM_SLOWER	(-2 )	 /* Slow the Clock update rate by one medium adjustment step.  */
+#define	TPM_CLOCK_FINE_SLOWER	(-1 )	 /* Slow the Clock update rate by one fine adjustment step.  */
 #define	TPM_CLOCK_NO_CHANGE	(0 )	 /* No change to the Clock update rate.  */
 #define	TPM_CLOCK_FINE_FASTER	(1 )	 /* Speed the Clock update rate by one fine adjustment step.  */
 #define	TPM_CLOCK_MEDIUM_FASTER	(2 )	 /* Speed the Clock update rate by one medium adjustment step.  */
@@ -442,17 +445,17 @@ typedef	TPM_HANDLE TPM_HC;
 #define	HR_NV_INDEX	(TPM_HT_NV_INDEX << HR_SHIFT )	 /*   */
 #define	HR_PERMANENT	(TPM_HT_PERMANENT << HR_SHIFT )	 /*   */
 #define	PCR_FIRST	(HR_PCR + 0 )	 /* first PCR  */
-#define	PCR_LAST	(PCR_FIRST + IMPLEMENTATION_PCR1 )	 /* last PCR  */
+#define	PCR_LAST	(PCR_FIRST + IMPLEMENTATION_PCR - 1 )	 /* last PCR  */
 #define	HMAC_SESSION_FIRST	(HR_HMAC_SESSION + 0 )	 /* first HMAC session  */
-#define	HMAC_SESSION_LAST	(HMAC_SESSION_FIRST+MAX_ACTIVE_SESSIONS1 )	 /* last HMAC session  */
+#define	HMAC_SESSION_LAST	(HMAC_SESSION_FIRST + MAX_ACTIVE_SESSIONS - 1 )	 /* last HMAC session  */
 #define	LOADED_SESSION_FIRST	(HMAC_SESSION_FIRST )	 /* used in GetCapability  */
 #define	LOADED_SESSION_LAST	(HMAC_SESSION_LAST )	 /* used in GetCapability  */
 #define	POLICY_SESSION_FIRST	(HR_POLICY_SESSION + 0 )	 /* first policy session  */
-#define	POLICY_SESSION_LAST	(POLICY_SESSION_FIRST + MAX_ACTIVE_SESSIONS1 )	 /* last policy session   */
+#define	POLICY_SESSION_LAST	(POLICY_SESSION_FIRST + MAX_ACTIVE_SESSIONS - 1 )	 /* last policy session   */
 #define	TRANSIENT_FIRST	(HR_TRANSIENT + 0 )	 /* first transient object  */
 #define	ACTIVE_SESSION_FIRST	(POLICY_SESSION_FIRST )	 /* used in GetCapability  */
 #define	ACTIVE_SESSION_LAST	(POLICY_SESSION_LAST )	 /* used in GetCapability  */
-#define	TRANSIENT_LAST	(TRANSIENT_FIRST+MAX_LOADED_OBJECTS1 )	 /* last transient object  */
+#define	TRANSIENT_LAST	(TRANSIENT_FIRST + MAX_LOADED_OBJECTS - 1 )	 /* last transient object  */
 #define	PERSISTENT_FIRST	(HR_PERSISTENT + 0 )	 /* first persistent object  */
 #define	PERSISTENT_LAST	(PERSISTENT_FIRST + 0x00FFFFFF )	 /* last persistent object  */
 #define	PLATFORM_PERSISTENT	(PERSISTENT_FIRST + 0x00800000 )	 /* first platform persistent object  */
@@ -1181,6 +1184,12 @@ typedef	struct {
 	TPM_ECC_CURVE	eccCurves[MAX_ECC_CURVES];	 /* array of ECC curve identifiers  */
 } TPML_ECC_CURVE;
 
+/* Implementation specific structure to hold Intel PTT specific property data. */
+typedef	struct {
+	UINT32	count;	/* number of properties zero is allowed.  */
+	UINT32	property[MAX_PTT_PROPERTIES];	/* property value */
+} TPML_INTEL_PTT_PROPERTY;
+
 /* Table 107  Definition of TPMU_CAPABILITIES Union <OUT> */
 typedef	union {
 	TPML_ALG_PROPERTY	algorithms;	 /*   */
@@ -1192,6 +1201,7 @@ typedef	union {
 	TPML_TAGGED_TPM_PROPERTY	tpmProperties;	 /*   */
 	TPML_TAGGED_PCR_PROPERTY	pcrProperties;	 /*   */
 	TPML_ECC_CURVE	eccCurves;	 /* TPM_ALG_ECC  */
+	TPML_INTEL_PTT_PROPERTY	intelPttProperty;
 } TPMU_CAPABILITIES;
 
 /* Table 108  Definition of TPMS_CAPABILITY_DATA Structure <OUT> */
@@ -1955,4 +1965,30 @@ typedef	struct {
 /* Table 206  Definition of TPM2B_CREATION_DATA Structure <OUT> */
 TPM2B_TYPE2( CREATION_DATA, TPMS_CREATION_DATA, creationData );
 
+typedef UINT32 TPM_AT;
+
+/* Definition of (UINT32) TPM_AT Constants.
+ * Note: values of 0x80000000 through 0xFFFFFFFF are reserved for vendor-specific use */
+#define TPM_AT_ANY   0x00000000 /* In a command, a non-specific request for AC information. In a response, indicates that outputData is not meaningful */
+#define TPM_AT_ERROR 0x00000001 /* Indicates a TCG defined, device-specific error */
+#define TPM_AT_PV1   0x00000002 /* Indicates the most significant 32 bits of a pairing value for the AC */
+#define TPM_AT_VEND  0x80000000 /* Value added to a TPM_AT to indicate a vendor-specific tag value */
+
+typedef UINT32 TPM_EA;
+
+#define TPM_AE_NONE  0x00000000 /* In a command, a non-specific request for AC information. In a response, indicates that outputData is not meaningful */
+
+typedef TPM_HANDLE TPMI_RH_AC; /* Interface used to identify an attached component */
+
+/* Definition of TPMS_AC_OUTPUT Structure <OUT> */
+typedef struct {
+    TPM_AT tag; /* Indicates the contents of data */
+    UINT32 data; /* Data returned from the AC */
+} TPMS_AC_OUTPUT;
+
+/* Definition of TPML_AC_CAPABILITIES Structure <OUT> */
+typedef struct {
+    UINT32 count; /* Number of values in the acCapabilities list. May be 0 */
+    TPMS_AC_OUTPUT acCapabilities[TPM2_MAX_AC_CAPABILITIES]; /* List of AC values */
+} TPML_AC_CAPABILITIES;
 #endif
