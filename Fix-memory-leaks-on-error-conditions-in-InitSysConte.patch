@@ -1,0 +1,38 @@
+diff -ur TPM2.0-TSS-1.0/common/syscontext.c TPM2.0-TSS-1.0-new/common/syscontext.c
+--- TPM2.0-TSS-1.0/common/syscontext.c	2016-11-01 06:53:15.000000000 -0700
++++ TPM2.0-TSS-1.0-new/common/syscontext.c	2017-04-02 16:36:47.603294296 -0700
+@@ -58,10 +58,12 @@
+         // Initialized the system context structure.
+         rval = Tss2_Sys_Initialize( sysContext, contextSize, tctiContext, abiVersion );
+ 
+-        if( rval == TSS2_RC_SUCCESS )
++        if( rval == TSS2_RC_SUCCESS ) {
+             return sysContext;
+-        else
+-            return 0;
++        } else {
++	    free (sysContext);
++            return NULL;
++	}
+     }
+     else
+     {
+diff -ur TPM2.0-TSS-1.0/resourcemgr/resourcemgr.c TPM2.0-TSS-1.0-new/resourcemgr/resourcemgr.c
+--- TPM2.0-TSS-1.0/resourcemgr/resourcemgr.c	2016-11-01 06:53:15.000000000 -0700
++++ TPM2.0-TSS-1.0-new/resourcemgr/resourcemgr.c	2017-04-02 16:36:47.604294312 -0700
+@@ -2708,6 +2708,7 @@
+         if( cmdServerStruct->connectSock == INVALID_SOCKET )
+         {
+             printf( "Accept failed.  Error is 0x%x\n", WSAGetLastError() );
++	    (*rmFree)( cmdServerStruct );
+             continue;
+         }
+ 
+@@ -2752,6 +2753,7 @@
+     if( 0 == strcmp( &otherCmdStr[0], serverStruct->serverName ) )
+     {
+         printf( "SockServer died (%s), socket: 0x%x.\n", serverStruct->serverName, serverStruct->connectSock );
++	(*rmFree)( cmdServerStruct );
+         ExitThread( 0 );
+     }
+ 

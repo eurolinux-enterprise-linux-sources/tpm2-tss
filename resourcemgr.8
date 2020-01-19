@@ -1,0 +1,28 @@
+.TH RESOURCEMGR "8" "2017-05-24" "TPM Management"
+.SH NAME
+resourcemgr \- TPM resource manager
+.SH SYNOPSIS
+.B resourcemgr
+[\fIOPTION\fR]...
+.SH DESCRIPTION
+.PP
+Manage resources for Trusted Platform Module usage.
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+display this help and exit
+.TP
+\fB\-sim\fR
+Tells resource manager to communicate with TPM 2.0 simulator (default: communicates with local TPM)
+.TP
+\fB\-tpmhost \fIaddress\fB\fR
+Specifies the host IP address for communicating with the TPM (default: 127.0.0.1; only valid if -sim used)
+.TP
+\fB\-tpmport \fIport\fB\fR
+Specifies the port number for communicating with the TPM (default: 2321; only valid if -sim used)
+.TP
+\fB\-apport \fIport\fB\fR
+Specifies the port number for communicating with the calling application (default: 2323)
+.SH AUTHOR
+Written by Jerry Snitselaar.
+.SH COPYRIGHT
+Copyright \(co 2017 Red Hat Inc.

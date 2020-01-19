@@ -1,0 +1,10 @@
+[Unit]
+Description=TPM2 resource manager & access broker
+Documentation=http://www.github.com/01org/TPM2.0-TSS
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/resourcemgr
+
+[Install]
+WantedBy=multi-user.target
