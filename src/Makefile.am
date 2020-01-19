@@ -94,14 +94,21 @@ man3_MANS = man/man3/InitDeviceTcti.3 man/man3/InitSocketTcti.3
 man7_MANS = man/man7/tcti-device.7 man/man7/tcti-socket.7
 
 EXTRA_DIST = \
+    AUTHORS \
+    CHANGELOG.md \
+    CONTRIBUTING.md \
+    INSTALL \
     LICENSE \
+    README.md \
+    RELEASE.md \
+    VERSION \
     lib/debug_config.site \
     lib/tcti-device.pc.in \
     lib/tcti-socket.pc.in \
     lib/sapi.pc.in \
     man/man-postlude.troff \
     man/InitDeviceTcti.3.in \
-    man/man3/InitSocketTcti.3 \
+    man/InitSocketTcti.3.in \
     man/tcti-device.7.in \
     man/tcti-socket.7.in \
     $(INT_LOG_COMPILER) \
@@ -125,7 +132,7 @@ test_unit_tcti_socket_SOURCES = tcti/platformcommand.c tcti/tcti_socket.cpp \
 
 test_unit_CommonPreparePrologue_CFLAGS = $(CMOCKA_CFLAGS) $(AM_CFLAGS)
 test_unit_CommonPreparePrologue_LDFLAGS = -Wl,--unresolved-symbols=ignore-all
-test_unit_CommonPreparePrologue_LDADD = $(CMOCKA_LIBS)
+test_unit_CommonPreparePrologue_LDADD = $(CMOCKA_LIBS) $(libsapi)
 test_unit_CommonPreparePrologue_SOURCES = \
     test/unit/CommonPreparePrologue.c sysapi/sysapi_util/CommandUtil.c \
     sysapi/sysapi/ContextManagement.c
@@ -136,7 +143,7 @@ test_unit_GetNumHandles_SOURCES = test/unit/GetNumHandles.c
 
 test_unit_CopyCommandHeader_CFLAGS = $(CMOCKA_CFLAGS) $(AM_CFLAGS)
 test_unit_CopyCommandHeader_LDFLAGS = -Wl,--unresolved-symbols=ignore-all
-test_unit_CopyCommandHeader_LDADD = $(CMOCKA_LIBS)
+test_unit_CopyCommandHeader_LDADD = $(CMOCKA_LIBS) $(libsapi)
 test_unit_CopyCommandHeader_SOURCES = \
     test/unit/CopyCommandHeader.c sysapi/sysapi_util/CommandUtil.c \
     sysapi/sysapi/ContextManagement.c sysapi/sysapi_util/changeEndian.c

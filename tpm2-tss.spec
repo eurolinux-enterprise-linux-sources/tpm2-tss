@@ -1,15 +1,16 @@
 Name:           tpm2-tss
-Version:        1.3.0
+Version:        1.4.0
 Release:        2%{?dist}
 Summary:        TPM2.0 Software Stack
 
 # The entire source code is under BSD except implementation.h and tpmb.h which
 # is under TCGL(Trusted Computing Group License).
 License:        BSD and TCGL
-URL:            https://github.com/01org/tpm2-tss
-Source0:        https://github.com/01org/tpm2-tss/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
+URL:            https://github.com/tpm2-software/tpm2-tss
+Source0:        https://github.com/tpm2-software/tpm2-tss/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
+Source1:        60-tpm-udev.rules
 
-Patch0: autoconf-fixup.patch
+Patch0:         autoconf-fixup.patch
 
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
@@ -18,6 +19,8 @@ BuildRequires:  libtool
 BuildRequires:  pkgconfig
 
 Obsoletes:  %{name}-utils <= 1.1.0-1
+# udev rules moved from tpm2-abrmd package
+Conflicts:  tpm2-abrmd%{?_isa} <= 1.1.0-8%{?dist}
 
 # this package does not support big endian arch so far,
 # and has been verified only on Intel platforms.
@@ -34,21 +37,26 @@ APIs for applications to access TPM module through kernel TPM drivers.
 
 
 %build
-%configure  --disable-static --disable-silent-rules
+%configure --disable-static --disable-silent-rules
 %make_build
 
 %install
 %make_install
 find %{buildroot}%{_libdir} -type f -name \*.la -delete
 
+mkdir -p %{buildroot}%{_udevrulesdir}
+install -m 0644 -D -t %{buildroot}/%{_udevrulesdir}/ %{SOURCE1}
+
 %clean
 rm -rf %{buildroot}
 
 %files
+%doc README.md CHANGELOG.md
 %license LICENSE
 %{_libdir}/libsapi.so.*
 %{_libdir}/libtcti-device.so.*
 %{_libdir}/libtcti-socket.so.*
+%{_udevrulesdir}/60-tpm-udev.rules
 
 %package        devel
 Summary:        Headers and libraries for building apps that use tpm2-tss 
@@ -75,6 +83,14 @@ use tpm2-tss.
 %postun -p /sbin/ldconfig
 
 %changelog
+* Thu Sep 06 2018 Jerry Snitselaar <jsnitsel@redhat.com> - 1.4.0-2
+- Add conflict for older tpm2-abrmd versions due to udev rules move.
+resolves: rhbz#1626069
+
+* Fri Jun 15 2018 Jerry Snitselaar <jsnitsel@redhat.com> - 1.4.0-1
+- Rebase to 1.4.0 release
+resolves: rhbz#1515116
+
 * Thu Dec 14 2017 Jerry Snitselaar <jsnitsel@redhat.com> - 1.3.0-2
 - Fix package version in autoconf
 resolves: rhbz#1463097
