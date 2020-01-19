@@ -28,10 +28,9 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#include <sapi/tpm20.h>
-#include <tcti/tcti_socket.h>
+#include "sapi/tpm20.h"
+#include "tcti/tcti_socket.h"
 #include <stdio.h>
-#include "sockets.h"
 
 #ifdef __cplusplus
 extern "C" {

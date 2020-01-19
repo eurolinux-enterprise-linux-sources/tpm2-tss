@@ -25,7 +25,7 @@
 // THE POSSIBILITY OF SUCH DAMAGE.
 //**********************************************************************;
 
-#include <sapi/tpm20.h>
+#include "sapi/tpm20.h"
 #include "sysapi_util.h"
 
 void Unmarshal_Simple_TPM2B( UINT8 *outBuffPtr, UINT32 maxResponseSize, UINT8 **nextData, TPM2B *outTPM2B, TSS2_RC *rval )
@@ -69,7 +69,7 @@ void Unmarshal_Simple_TPM2B( UINT8 *outBuffPtr, UINT32 maxResponseSize, UINT8 **
                 if( *rval == TSS2_RC_SUCCESS )
                 {
                     // Copy to output TPM2B.
-                    for( i = 0; i < length; i++ )
+                    for( i = 0; i < length && *rval == TSS2_RC_SUCCESS; i++ )
                     {
                         if( outTPM2B != 0 )
                         {

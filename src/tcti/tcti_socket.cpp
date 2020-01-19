@@ -1,5 +1,5 @@
 //**********************************************************************;
-// Copyright (c) 2015, 2016 Intel Corporation
+// Copyright (c) 2015, 2016, 2017 Intel Corporation
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,12 +28,13 @@
 #include <stdio.h>
 #include <stdlib.h>   // Needed for _wtoi
 
-#include <sapi/tpm20.h>
-#include <tcti/tcti_socket.h>
+#include "sapi/tpm20.h"
+#include "tcti/tcti_socket.h"
 #include "sysapi_util.h"
-#include "debug.h"
+#include "common/debug.h"
 #include "commonchecks.h"
 #include "logging.h"
+#include "sockets.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -100,7 +101,7 @@ TSS2_RC SocketSendTpmCommand(
     )
 {
     UINT32 tpmSendCommand = MS_SIM_TPM_SEND_COMMAND;  // Value for "send command" to MS simulator.
-    UINT32 cnt, cnt1;
+    UINT32 cnt = 0;
     UINT8 locality;
     TSS2_RC rval = TSS2_RC_SUCCESS;
 
@@ -132,9 +133,6 @@ TSS2_RC SocketSendTpmCommand(
 #endif
     }
 #endif
-    // Size TPM 1.2 and TPM 2.0 headers overlap exactly, we can use
-    // either 1.2 or 2.0 header to get the size.
-    cnt = CHANGE_ENDIAN_DWORD(((TPM20_Header_In *) command_buffer)->commandSize);
 
     // Send TPM_SEND_COMMAND
     tpmSendCommand = CHANGE_ENDIAN_DWORD(tpmSendCommand);
@@ -156,21 +154,20 @@ TSS2_RC SocketSendTpmCommand(
 #endif
 
     // Send number of bytes.
-    cnt1 = cnt;
-    cnt = CHANGE_ENDIAN_DWORD(cnt);
+    cnt = CHANGE_ENDIAN_DWORD(command_size);
     rval = tctiSendBytes( tctiContext, TCTI_CONTEXT_INTEL->tpmSock, (unsigned char *)&cnt, 4 );
     if( rval != TSS2_RC_SUCCESS )
         goto returnFromSocketSendTpmCommand;
 
     // Send the TPM command buffer
-    rval = tctiSendBytes( tctiContext, TCTI_CONTEXT_INTEL->tpmSock, (unsigned char *)command_buffer, cnt1 );
+    rval = tctiSendBytes( tctiContext, TCTI_CONTEXT_INTEL->tpmSock, (unsigned char *)command_buffer, command_size );
     if( rval != TSS2_RC_SUCCESS )
         goto returnFromSocketSendTpmCommand;
 
 #ifdef DEBUG
     if( ((TSS2_TCTI_CONTEXT_INTEL *)tctiContext )->status.debugMsgEnabled == 1 )
     {
-        DEBUG_PRINT_BUFFER( rmPrefix, command_buffer, cnt1 );
+        DEBUG_PRINT_BUFFER( rmPrefix, command_buffer, command_size );
     }
 #endif
     ((TSS2_TCTI_CONTEXT_INTEL *)tctiContext)->status.commandSent = 1;
@@ -244,6 +241,14 @@ TSS2_RC SocketSetLocality(
     }
 
     return rval;
+}
+
+TSS2_RC SocketGetPollHandles(
+    TSS2_TCTI_CONTEXT     *tctiContext,
+    TSS2_TCTI_POLL_HANDLE *handles,
+    size_t                *num_handles)
+{
+    return TSS2_TCTI_RC_NOT_IMPLEMENTED;
 }
 
 void SocketFinalize(
@@ -501,10 +506,18 @@ TSS2_RC InitSocketTcti (
     SOCKET otherSock;
     SOCKET tpmSock;
 
-    if( tctiContext == NULL )
+    if( tctiContext == NULL && contextSize == NULL )
+    {
+        return TSS2_TCTI_RC_BAD_VALUE;
+    }
+    else if( tctiContext == NULL )
     {
         *contextSize = sizeof( TSS2_TCTI_CONTEXT_INTEL );
         return TSS2_RC_SUCCESS;
+    }
+    else if( conf == NULL )
+    {
+        return TSS2_TCTI_RC_BAD_VALUE;
     }
     else
     {
@@ -515,7 +528,7 @@ TSS2_RC InitSocketTcti (
         TSS2_TCTI_RECEIVE( tctiContext ) = SocketReceiveTpmResponse;
         TSS2_TCTI_FINALIZE( tctiContext ) = SocketFinalize;
         TSS2_TCTI_CANCEL( tctiContext ) = SocketCancel;
-        TSS2_TCTI_GET_POLL_HANDLES( tctiContext ) = 0;
+        TSS2_TCTI_GET_POLL_HANDLES( tctiContext ) = SocketGetPollHandles;
         TSS2_TCTI_SET_LOCALITY( tctiContext ) = SocketSetLocality;
         ((TSS2_TCTI_CONTEXT_INTEL *)tctiContext)->status.debugMsgEnabled = 0;
         ((TSS2_TCTI_CONTEXT_INTEL *)tctiContext)->status.locality = 3;
@@ -530,7 +543,7 @@ TSS2_RC InitSocketTcti (
         TCTI_LOG_BUFFER_CALLBACK( tctiContext ) = conf->logBufferCallback;
         TCTI_LOG_DATA( tctiContext ) = conf->logData;
 
-        rval = (TSS2_RC) InitSockets( conf->hostname, conf->port, serverSockets, &otherSock, &tpmSock, TCTI_LOG_CALLBACK( tctiContext ), TCTI_LOG_DATA( tctiContext) );
+        rval = (TSS2_RC) InitSockets( conf->hostname, conf->port, &otherSock, &tpmSock, TCTI_LOG_CALLBACK( tctiContext ), TCTI_LOG_DATA( tctiContext) );
         if( rval == TSS2_RC_SUCCESS )
         {
             ((TSS2_TCTI_CONTEXT_INTEL *)tctiContext)->otherSock = otherSock;

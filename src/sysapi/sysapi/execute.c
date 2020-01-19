@@ -25,7 +25,7 @@
 // THE POSSIBILITY OF SUCH DAMAGE.
 //**********************************************************************;
 
-#include <sapi/tpm20.h>
+#include "sapi/tpm20.h"
 #include "sysapi_util.h"
 
 TSS2_RC Tss2_Sys_ExecuteAsync(
@@ -160,7 +160,7 @@ TSS2_RC Tss2_Sys_Execute(
     rval = Tss2_Sys_ExecuteAsync( sysContext );
     if( rval == TSS2_RC_SUCCESS )
     {
-        rval = Tss2_Sys_ExecuteFinish( sysContext, 180*1000 );
+        rval = Tss2_Sys_ExecuteFinish( sysContext, TSS2_TCTI_TIMEOUT_BLOCK );
     }
     return rval;
 }

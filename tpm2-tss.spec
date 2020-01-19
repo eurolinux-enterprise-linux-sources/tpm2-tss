@@ -1,35 +1,23 @@
 Name:           tpm2-tss
-Version:        1.0 
-Release:        5%{?dist}
+Version:        1.3.0
+Release:        2%{?dist}
 Summary:        TPM2.0 Software Stack
-
-%global  pkg_prefix  TPM2.0-TSS
 
 # The entire source code is under BSD except implementation.h and tpmb.h which
 # is under TCGL(Trusted Computing Group License).
 License:        BSD and TCGL
-URL:            https://github.com/01org/TPM2.0-TSS
-Source0:        https://github.com/01org/TPM2.0-TSS/archive/%{version}.tar.gz#/%{pkg_prefix}-%{version}.tar.gz
-Source1:        resourcemgr.service
-Source2:        resourcemgr.8
+URL:            https://github.com/01org/tpm2-tss
+Source0:        https://github.com/01org/tpm2-tss/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 
-# RHEL only (resolves building on RHEL)
-Patch0001: swap-pthread-check.patch
-# RHEL only (enable install of test programs)
-Patch0002: test-app.patch
-# backport of upstream commit b0f09514467f3
-Patch0003: Fix-memory-leaks-on-error-conditions-in-InitSysConte.patch
-# backport of upstream commit b6ad056f2050b
-Patch0004: avoid-potential-null-deref.patch
+Patch0: autoconf-fixup.patch
 
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
+BuildRequires:  autoconf-archive
 BuildRequires:  libtool
 BuildRequires:  pkgconfig
-BuildRequires:  systemd-units
-Requires(post): systemd-units
-Requires(preun): systemd-units
-Requires(postun): systemd-units
+
+Obsoletes:  %{name}-utils <= 1.1.0-1
 
 # this package does not support big endian arch so far,
 # and has been verified only on Intel platforms.
@@ -41,7 +29,7 @@ APIs. It sits between TPM driver and applications, providing TPM2.0 specified
 APIs for applications to access TPM module through kernel TPM drivers.
 
 %prep
-%autosetup -p1 -n %{pkg_prefix}-%{version}
+%autosetup -p1 -n %{name}-%{version}
 ./bootstrap
 
 
@@ -52,35 +40,15 @@ APIs for applications to access TPM module through kernel TPM drivers.
 %install
 %make_install
 find %{buildroot}%{_libdir} -type f -name \*.la -delete
-mkdir -p %{buildroot}%{_bindir}
-mkdir -p %{buildroot}%{_unitdir}/
-install -m 0644 %{SOURCE1} %{buildroot}%{_unitdir}/
-mkdir -p %{buildroot}%{_mandir}/man8/
-install -m 0644 %{SOURCE2} %{buildroot}%{_mandir}/man8/
 
 %clean
 rm -rf %{buildroot}
 
-%post
-%systemd_post resourcemgr.service
-/sbin/ldconfig
-
-%preun
-%systemd_preun resourcemgr.service
-
-%postun
-%systemd_postun resourcemgr.service
-/sbin/ldconfig
-
 %files
-%doc README.md CHANGELOG.md 
 %license LICENSE
 %{_libdir}/libsapi.so.*
 %{_libdir}/libtcti-device.so.*
 %{_libdir}/libtcti-socket.so.*
-%{_sbindir}/resourcemgr
-%attr(644,root,root) %{_unitdir}/resourcemgr.service
-%{_mandir}/man8/resourcemgr.8.gz
 
 %package        devel
 Summary:        Headers and libraries for building apps that use tpm2-tss 
@@ -99,20 +67,26 @@ use tpm2-tss.
 %{_libdir}/pkgconfig/sapi.pc
 %{_libdir}/pkgconfig/tcti-device.pc
 %{_libdir}/pkgconfig/tcti-socket.pc
+%{_mandir}/man3/Init*Tcti.3.gz
+%{_mandir}/man7/tcti-*.7.gz
 
-%package        utils
-Summary:        Utilities for tpm2-tss
-Requires:       %{name}%{_isa} = %{version}-%{release}
+%post -p /sbin/ldconfig
 
-%description    utils
-Utilities for tpm2-tss, such as testing features of
-tpm device or simulator.
-
-%files utils
-%{_bindir}/tpmclient
-%{_bindir}/tpmtest
+%postun -p /sbin/ldconfig
 
 %changelog
+* Thu Dec 14 2017 Jerry Snitselaar <jsnitsel@redhat.com> - 1.3.0-2
+- Fix package version in autoconf
+resolves: rhbz#1463097
+
+* Wed Dec 13 2017 Jerry Snitselaar <jsnitsel@redhat.com> - 1.3.0-1
+- Rebase to 1.3.0 release
+resolves: rhbz#1463097
+
+* Thu Aug 31 2017 Jerry Snitselaar <jsnitsel@redhat.com> - 1.1.0-1
+- Rebase to 1.1.0
+resolves: rhbz#1463097
+
 * Wed Jun 07 2017 Jerry Snitselaar <jsnitsel@redhat.com> - 1.0-5
 - Add manpage for resourcemgr
 resolves: rhbz#1459635

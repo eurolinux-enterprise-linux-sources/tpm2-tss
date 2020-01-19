@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>   // Needed for _wtoi
 
-#include <sapi/tpm20.h>
+#include "sapi/tpm20.h"
 #include "debug.h"
 
 int DebugPrintf( printf_type type, const char *format, ...)
@@ -222,7 +222,10 @@ const char* strTpmCommandCode( TPM_CC code )
     }
     else
     {
-        sprintf( &undefinedCommandString[0], "0x%4.4x", code );
+        snprintf( &undefinedCommandString[0],
+                  sizeof (undefinedCommandString),
+                  "0x%4.4x",
+                  code );
         return &undefinedCommandString[0];
     }
 }
